@@ -55,3 +55,7 @@ def display_device(device):
 
 def get_uses(device, config):
     return [notify]
+
+from version import VERSION
+__version__ = VERSION
+
