@@ -9,10 +9,56 @@ from libpebble2.communication.transports.serial import SerialTransport
 from libpebble2.exceptions import TimeoutError
 from libpebble2.services.notifications import Notifications
 from openaps.uses.use import Use
+from openaps.uses.registry import Registry
+
+import  list_pebbles
 
 MAX_FAILS = 2
 SLEEP_LENGTH = 0.2
 
+use = Registry( )
+
+@use( )
+class scan_pebbles (Use):
+    def get_params (self, args):
+      return dict(timeout=args.timeout)
+    def configure_app (self, app, parser):
+      parser.add_argument('--timeout', type=int, default=10)
+    def main (self, args, app):
+      params = self.get_params(args)
+      print "pebbles:", params
+      result = list_pebbles.do_list(**params)
+      # method = list_pebbles.List(**params)
+      # method.run( )
+      
+
+@use( )
+class configure (Use):
+    """
+    Configure pebble rfcomm
+    """
+    def configure_app (self, app, parser):
+        default_port = self.device.get('port')
+        parser.add_argument('--rfcomm', default=None)
+        # parser.add_argument('message')
+    def get_params (self, args):
+        conf = dict(port=None)
+        if args.rfcomm:
+          conf.update(port=args.rfcomm)
+        return conf
+    def main (self, args, app):
+      dirty = False
+      results = dict(port=self.device.get('port', None))
+      if args.rfcomm:
+        self.device.extra.add_option('port', args.rfcomm)
+        results.update(port=args.rfcomm)
+        dirty = True
+      if dirty:
+        self.device.store(app.config)
+        app.config.save( )
+      return results
+
+@use( )
 class notify(Use):
     def get_params(self, args):
         return {key: args.__dict__.get(key, '') for key in ('subject', 'message')}
@@ -45,16 +91,18 @@ class notify(Use):
                     raise
 
 def configure_add_app(app, parser):
-    parser.add_argument('port')
+    parser.add_argument('port', nargs='?')
+
 
 def set_config(args, device):
-    device.add_option('port', args.port)
+    port = args.port
+    if port:
+      device.add_option('port', port)
 
 def display_device(device):
     return ''
 
-def get_uses(device, config):
-    return [notify]
+get_uses = use.get_uses
 
 from version import VERSION
 __version__ = VERSION
