@@ -2,11 +2,33 @@
 
 Send OpenAPS status updates to a Pebble watch.
 
-Don't use this yet.
+## Rationale
 
-### Temporary, possibly wrong instructions for Raspberry Pi:
+To monitor an [OpenAPS artificial pancreas system](https://github.com/openaps/docs) in real-time, a typical setup looks like:
+```
+Raspberry Pi/Intel Edison -> network -> Nightscout server -> network -> smartphone
+                                                                     |
+                                                                     -> smartwatch
+                                                                     |
+                                                                     -> laptop
+```
 
-1. Install [BlueZ](http://www.bluez.org/) and [libpebble2](https://github.com/pebble/libpebble2)
+In the best case, you're somewhere like a home or office, where your Pi/Edison has already been configured to connect to the wifi. When that's not possible, you can enable a personal hotspot on your phone (until your phone dies, at least).
+
+But in many cases (on a plane, on a long cycling or hiking trip, overseas, underground), you don't have internet, and the whole beautiful constellation of network hops fizzles away. In those cases you should use something like Pancreabble.
+```
+Raspberry Pi/Intel Edison -> Bluetooth -> Pebble watch
+```
+
+## Check out this photo
+
+It doesn't do much yet, but you can send a Pebble "notification" at the end of your loop. Take off the watch band and whoa you just added an e-ink screen to your APS:
+
+![](http://i.imgur.com/wrBmlQM.jpg)
+
+## Temporary, possibly wrong instructions for Raspberry Pi:
+
+1. Install [BlueZ](http://www.bluez.org/) and [libpebble2](https://github.com/pebble/libpebble2).
 
    ```
    # I assume it's something like:
@@ -58,8 +80,14 @@ Don't use this yet.
   rfcomm bind hci0 <mac address>
   ```
 
-### Coming soon
+## Caveats
 
+* The Pebble expects to have its time set by a [special message](https://libpebble2.readthedocs.org/en/latest/protocol/#fields) from the Pebble app which it expects is running on the smartphone with which it expects to be paired. This library does not currently send that message, so your Pebble's time may be wrong.
+* When your Pi/Edison is off the grid and thus doesn't have access to NTP, unless you've [cleverly worked around](https://github.com/openaps/oref0/blob/master/bin/clockset.sh) the Pi's lack of RTC or configured the Edison's RTC, the times reported by that device will also be wrong. (If you do manage to [configure the Edison's RTC](https://communities.intel.com/thread/55831?start=0&tstart=0), would you be so kind as file an issue explaining how you did it?)
+
+## Coming soon
+
+* Clock set command
 * Package for PyPI
 * Auto-configure/pair/bind
 * Support for [Urchin](https://github.com/mddub/urchin-cgm/)
