@@ -10,6 +10,8 @@ from libpebble2.exceptions import TimeoutError
 from libpebble2.services.notifications import Notifications
 from openaps.uses.use import Use
 
+from version import __version__
+
 MAX_FAILS = 2
 SLEEP_LENGTH = 0.2
 
@@ -55,7 +57,3 @@ def display_device(device):
 
 def get_uses(device, config):
     return [notify]
-
-from version import VERSION
-__version__ = VERSION
-

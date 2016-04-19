@@ -26,7 +26,7 @@ It doesn't do much yet, but you can send a Pebble "notification" at the end of y
 
 ![](http://i.imgur.com/wrBmlQM.jpg)
 
-## Temporary, possibly wrong instructions for Raspberry Pi:
+## Temporary, possibly wrong instructions for Raspberry Pi
 
 1. Install [BlueZ](http://www.bluez.org/) and [libpebble2](https://github.com/pebble/libpebble2).
 
@@ -58,10 +58,16 @@ It doesn't do much yet, but you can send a Pebble "notification" at the end of y
   sudo rfcomm bind hci0 <mac address>
   ```
 
-1. Add OpenAPS vendor and device:
+1. Install Pancreabble, add it as an OpenAPS vendor, add a device:
 
   ```
-  openaps vendor add pancreabble --path /path/to/this/repository
+  # anywhere:
+  git clone https://github.com/mddub/pancreabble.git
+  cd pancreabble
+  python setup.py develop --user
+
+  # in your openaps directory:
+  openaps vendor add pancreabble
   openaps device add pebble pancreabble /dev/rfcomm0
   openaps use pebble notify "hi" "hello"
 

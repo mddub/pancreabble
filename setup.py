@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
 
-import pancreabble
+__version__ = None
+exec(open('pancreabble/version.py').read())
+
 setup(
     name='pancreabble',
-    version=pancreabble.__version__,
+    version=__version__,
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["libpebble2", ],
+    install_requires=[
+        "libpebble2",
+        "openaps",
+    ],
     scripts = [
 
     ]
