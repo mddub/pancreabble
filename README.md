@@ -61,10 +61,7 @@ It doesn't do much yet, but you can send a Pebble "notification" at the end of y
 1. Install Pancreabble, add it as an OpenAPS vendor, add a device:
 
   ```
-  # anywhere:
-  git clone https://github.com/mddub/pancreabble.git
-  cd pancreabble
-  python setup.py develop --user
+  pip install --user git+git://github.com/mddub/pancreabble.git
 
   # in your openaps directory:
   openaps vendor add pancreabble
