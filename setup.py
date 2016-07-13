@@ -12,6 +12,7 @@ setup(
     install_requires=[
         "libpebble2",
         "openaps",
+        "tzlocal",
     ],
     scripts = [
 

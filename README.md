@@ -26,7 +26,7 @@ It doesn't do much yet, but you can send a Pebble "notification" at the end of y
 
 ![](http://i.imgur.com/wrBmlQM.jpg)
 
-## Temporary, possibly wrong instructions for Raspberry Pi
+## Seemingly correct setup instructions for Raspberry Pi
 
 1. Install [BlueZ](http://www.bluez.org/) and [libpebble2](https://github.com/pebble/libpebble2).
 
@@ -66,13 +66,13 @@ It doesn't do much yet, but you can send a Pebble "notification" at the end of y
   # in your openaps directory:
   openaps vendor add pancreabble
   openaps device add pebble pancreabble /dev/rfcomm0
-  openaps use pebble notify "hi" "hello"
+  openaps use pebble notify "hello" "testing"
 
   # result:
   {
-    "received": true,
-    "message": "hello",
-    "subject": "hi"
+    "subject": "hello",
+    "message": "testing",
+    "received": true
   }
   ```
 
@@ -83,14 +83,24 @@ It doesn't do much yet, but you can send a Pebble "notification" at the end of y
   rfcomm bind hci0 <mac address>
   ```
 
+## Using it in your loop
+
+1. It's a good idea to set the Pebble clock to match the Pi/Edison once per loop:
+  ```
+  openaps use pebble set_clock
+  ```
+
+1. Write scripts to extract the relevant bits of your loop state and format them as a notification subject and message:
+  ```
+  openaps use pebble notify "`python pebble_subject.py`" "`python pebble_message.py`"
+  ```
+
 ## Caveats
 
-* The Pebble expects to have its time set by a [special message](https://libpebble2.readthedocs.org/en/latest/protocol/#fields) from the Pebble app which it expects is running on the smartphone with which it expects to be paired. This library does not currently send that message, so your Pebble's time may be wrong.
 * When your Pi/Edison is off the grid and thus doesn't have access to NTP, unless you've [cleverly worked around](https://github.com/openaps/oref0/blob/master/bin/clockset.sh) the Pi's lack of RTC or configured the Edison's RTC, the times reported by that device will also be wrong. (If you do manage to [configure the Edison's RTC](https://communities.intel.com/thread/55831?start=0&tstart=0), would you be so kind as file an issue explaining how you did it?)
 
 ## Coming soon
 
-* Clock set command
 * Package for PyPI
 * Auto-configure/pair/bind
 * Support for [Urchin](https://github.com/mddub/urchin-cgm/)
