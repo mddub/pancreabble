@@ -6,6 +6,8 @@ from datetime import datetime
 
 from notify import notify
 from pebble import set_time
+from urchin import format_urchin_data
+from urchin import send_urchin_data
 from version import __version__
 
 def configure_add_app(app, parser):
@@ -21,4 +23,6 @@ def get_uses(device, config):
     return [
         notify,
         set_time,
+        format_urchin_data,
+        send_urchin_data,
     ]
