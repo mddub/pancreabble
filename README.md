@@ -20,11 +20,48 @@ But in many cases (on a plane, on a long cycling or hiking trip, overseas, under
 Raspberry Pi/Intel Edison -> Bluetooth -> Pebble watch
 ```
 
-## Check out this photo
+## Using it in your loop: notifications
 
-It doesn't do much yet, but you can send a Pebble "notification" at the end of your loop. Take off the watch band and whoa you just added an e-ink screen to your APS:
+1. Format your loop state as a subject and message, and send them to the Pebble as a notification:
+  ```
+  openaps use pebble notify "`python pebble_subject.py`" "`python pebble_message.py`"
+  ```
 
-![](http://i.imgur.com/wrBmlQM.jpg)
+  (This assumes you've written `pebble_subject.py` / `pebble_message.py` to summarize the relevant bits of your loop state in the way you want.)
+
+1. Take off the watch band, leave your Pebble on the "Notifications" screen, and whoa you just added an e-ink screen to your APS:
+
+  ![](http://i.imgur.com/hapQB8I.jpg)
+
+## Using it in your loop: Urchin CGM
+
+1. Pair the Pebble with your phone, and use your phone to install [Urchin](https://github.com/mddub/urchin-cgm).
+
+1. Open the Urchin settings page in the Pebble app on your phone. Configure the graph and layout. Under "Update Settings", make sure the frequency is set to "When CGM reading expected".
+
+1. Forget the Pebble/phone pairing, and pair the Pebble with the Pi/Edison using the setup instructions below. (If it was previously paired, you may need to [forget and re-pair it](https://gist.github.com/0/c73e2557d875446b9603).)
+
+1. At the end of your loop, use `format_urchin_data` to prepare the data, and `send_urchin_data` to send it:
+  ```
+  # You'll want to generate your own loop summary to show in the status line.
+  echo '{"message": "loop status at '$(date +%-I:%M%P)': copacetic"}' > urchin-status.json
+
+  # You'll want to configure this as a report instead of calling it with "use".
+  openaps use pebble format_urchin_data monitor/dex-glucose.json \
+    --status-json urchin-status.json > urchin-data.json
+
+  # Likewise, consider making this a report.
+  openaps use pebble send_urchin_data urchin-data.json
+  ```
+
+  ![](http://i.imgur.com/n5dcNj1.jpg)
+
+## Setting the Pebble clock
+
+It's a good idea to set the Pebble clock to match the Pi/Edison once per loop:
+```
+openaps use pebble set_clock
+```
 
 ## Seemingly correct setup instructions for Raspberry Pi
 
@@ -83,18 +120,6 @@ It doesn't do much yet, but you can send a Pebble "notification" at the end of y
   rfcomm bind hci0 <mac address>
   ```
 
-## Using it in your loop
-
-1. It's a good idea to set the Pebble clock to match the Pi/Edison once per loop:
-  ```
-  openaps use pebble set_clock
-  ```
-
-1. Write scripts to extract the relevant bits of your loop state and format them as a notification subject and message:
-  ```
-  openaps use pebble notify "`python pebble_subject.py`" "`python pebble_message.py`"
-  ```
-
 ## Caveats
 
 * When your Pi/Edison is off the grid and thus doesn't have access to NTP, unless you've [cleverly worked around](https://github.com/openaps/oref0/blob/master/bin/clockset.sh) the Pi's lack of RTC or configured the Edison's RTC, the times reported by that device will also be wrong. (If you do manage to [configure the Edison's RTC](https://communities.intel.com/thread/55831?start=0&tstart=0), would you be so kind as file an issue explaining how you did it?)
@@ -103,4 +128,3 @@ It doesn't do much yet, but you can send a Pebble "notification" at the end of y
 
 * Package for PyPI
 * Auto-configure/pair/bind
-* Support for [Urchin](https://github.com/mddub/urchin-cgm/)
