@@ -1,6 +1,6 @@
 # pancreabble
 
-Send OpenAPS status updates to a Pebble watch.
+Send OpenAPS status updates to a Pebble watch via Bluetooth.
 
 ## Rationale
 
@@ -41,20 +41,32 @@ Raspberry Pi/Intel Edison -> Bluetooth -> Pebble watch
 
 1. Forget the Pebble/phone pairing, and pair the Pebble with the Pi/Edison using the setup instructions below. (If it was previously paired, you may need to [forget and re-pair it](https://gist.github.com/0/c73e2557d875446b9603).)
 
+1. For accurate display of CGM recency, it is highly recommended to add a report which reads the CGM clock. Here's what that might look like for Dexcom:
+  ```
+  openaps report add monitor/dex-clock.json JSON cgm ReadDisplayTime
+  ```
+
 1. At the end of your loop, use `format_urchin_data` to prepare the data, and `send_urchin_data` to send it:
   ```
   # You'll want to generate your own loop summary to show in the status line.
   echo '{"message": "loop status at '$(date +%-I:%M%P)': copacetic"}' > urchin-status.json
 
-  # You'll want to configure this as a report instead of calling it with "use".
-  openaps use pebble format_urchin_data monitor/dex-glucose.json \
-    --status-json urchin-status.json > urchin-data.json
+  openaps report add urchin-data.json JSON pebble format_urchin_data \
+    monitor/dex-glucose.json \
+    # Make sure you've read the CGM display clock earlier in your loop:
+    --cgm-clock monitor/dex-clock.json \
+    # ...and called whatever generates your loop summary message:
+    --status-json urchin-status.json
 
-  # Likewise, consider making this a report.
+  openaps report invoke urchin-data.json
+
+  # Consider making this a report, too
   openaps use pebble send_urchin_data urchin-data.json
   ```
 
   ![](http://i.imgur.com/n5dcNj1.jpg)
+
+See `openaps use pebble format_urchin_data --help` for more options.
 
 ## Setting the Pebble clock
 

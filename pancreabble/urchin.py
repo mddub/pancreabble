@@ -94,7 +94,13 @@ class format_urchin_data(Use):
         parser.add_argument(
             'glucose_history',
             help='JSON file containing glucose history',
-            metavar='glucose_history.json'
+            metavar='glucose-history.json'
+        )
+        parser.add_argument(
+            '--cgm-clock',
+            help='JSON file containing the display time of the CGM (e.g. from ReadDisplayTime use for Dexcom). Optional, but highly recommended for accurate reporting of CGM recency.',
+            metavar='cgm-clock.json',
+            required=False
         )
         parser.add_argument(
             '--status-text',
@@ -108,6 +114,10 @@ class format_urchin_data(Use):
             metavar='urchin-status.json',
             required=False
         )
+
+    def to_ini(self, args):
+        # XXX: openaps really should be smarter about serializing None
+        return dict((k, v or '') for k, v in args.__dict__.iteritems())
 
     def main(self, args, app):
         cgm_history = json.loads(open(args.glucose_history).read())
@@ -124,9 +134,13 @@ class format_urchin_data(Use):
         graph = graph_array(end_time, cgm_records, MAX_URCHIN_SGVS)
         delta = NO_DELTA_VALUE if graph[1] == 0 else (graph[0] - graph[1])
 
-        # TODO: take an optional cgm-clock.json arg, use its contents and mtime to compute real recency
-        # (can't compute recency using the device time)
-        recency = int(time.time() - os.stat(args.glucose_history).st_mtime)
+        if args.cgm_clock:
+            cgm_clock = datetime.strptime(json.loads(open(args.cgm_clock).read()), '%Y-%m-%dT%H:%M:%S')
+            cgm_clock_reported_at = datetime.fromtimestamp(os.stat(args.cgm_clock).st_mtime)
+            recency = int((datetime.now() - end_time + cgm_clock - cgm_clock_reported_at).total_seconds())
+        else:
+            # Without knowing offset of device clock, just use mtime of CGM history file
+            recency = int(time.time() - os.stat(args.glucose_history).st_mtime)
 
         status = 'openaps @ {:%-I:%M%P}'.format(datetime.now())
         if args.status_text:
