@@ -109,6 +109,10 @@ class format_urchin_data(Use):
             required=False
         )
 
+    def to_ini(self, args):
+        # XXX: openaps really should be smarter about serializing None
+        return dict((k, v or '') for k, v in args.__dict__.iteritems())
+
     def main(self, args, app):
         cgm_history = json.loads(open(args.glucose_history).read())
         cgm_records = [
