@@ -72,7 +72,7 @@ See `openaps use pebble format_urchin_data --help` for more options.
 
 It's a good idea to set the Pebble clock to match the Pi/Edison once per loop:
 ```
-openaps use pebble set_clock
+openaps use pebble set_time
 ```
 
 ## Seemingly correct setup instructions for Raspberry Pi

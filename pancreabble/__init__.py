@@ -4,11 +4,18 @@ Pancreabble - send OpenAPS status updates to a Pebble watch
 
 from datetime import datetime
 
+from openaps.uses.use import Use
+
 from notify import notify
 from pebble import set_time
 from urchin import format_urchin_data
 from urchin import send_urchin_data
 from version import __version__
+
+class version(Use):
+    """Return the installed version of the Pancreabble library."""
+    def main(self, args, app):
+        return __version__
 
 def configure_add_app(app, parser):
     parser.add_argument('port')
@@ -25,4 +32,5 @@ def get_uses(device, config):
         set_time,
         format_urchin_data,
         send_urchin_data,
+        version,
     ]
