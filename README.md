@@ -24,7 +24,7 @@ Raspberry Pi/Intel Edison -> Bluetooth -> Pebble watch
 
 1. Format your loop state as a subject and message, and send them to the Pebble as a notification:
   ```
-  openaps use pebble notify "`python pebble_subject.py`" "`python pebble_message.py`"
+  openaps use pbl notify "`python pebble_subject.py`" "`python pebble_message.py`"
   ```
 
   (This assumes you've written `pebble_subject.py` / `pebble_message.py` to summarize the relevant bits of your loop state in the way you want.)
@@ -41,7 +41,7 @@ Raspberry Pi/Intel Edison -> Bluetooth -> Pebble watch
 
 1. Forget the Pebble/phone pairing, and pair the Pebble with the Pi/Edison using the setup instructions below. (If it was previously paired, you may need to [forget and re-pair it](https://gist.github.com/0/c73e2557d875446b9603).)
 
-1. For accurate display of CGM recency, it is highly recommended to add a report which reads the CGM clock. Here's what that might look like for Dexcom:
+1. For accurate display of CGM recency, it is highly recommended to add a report which reads the CGM clock. Here's what that might look like for Dexcom (make sure it is connected via cable):
   ```
   openaps report add monitor/dex-clock.json JSON cgm ReadDisplayTime
   ```
@@ -51,7 +51,7 @@ Raspberry Pi/Intel Edison -> Bluetooth -> Pebble watch
   # You'll want to generate your own loop summary to show in the status line.
   echo '{"message": "loop status at '$(date +%-I:%M%P)': copacetic"}' > urchin-status.json
 
-  openaps report add urchin-data.json JSON pebble format_urchin_data \
+  openaps report add urchin-data.json JSON pbl format_urchin_data \
     monitor/dex-glucose.json \
     # Make sure you've read the CGM display clock earlier in your loop:
     --cgm-clock monitor/dex-clock.json \
@@ -61,33 +61,48 @@ Raspberry Pi/Intel Edison -> Bluetooth -> Pebble watch
   openaps report invoke urchin-data.json
 
   # Consider making this a report, too
-  openaps use pebble send_urchin_data urchin-data.json
+  openaps use pbl send_urchin_data urchin-data.json
   ```
 
   ![](http://i.imgur.com/n5dcNj1.jpg)
 
-See `openaps use pebble format_urchin_data --help` for more options.
+See `openaps use pbl format_urchin_data --help` for more options.
 
 ## Setting the Pebble clock
 
 It's a good idea to set the Pebble clock to match the Pi/Edison once per loop:
 ```
-openaps use pebble set_time
+openaps use pbl set_time
 ```
 
-## Seemingly correct setup instructions for Raspberry Pi
+## Seemingly correct setup instructions for Raspberry Pi / Edison
 
-1. Install [BlueZ](http://www.bluez.org/) and [libpebble2](https://github.com/pebble/libpebble2).
+1. Install [BlueZ](http://www.bluez.org/) and [libpebble2](https://github.com/pebble/libpebble2).  You need a bluetooth version 5.37 or above.  Best way to install would be:
 
-   ```
+````
    # I assume it's something like:
-   sudo apt-get install bluez
+# Install Bluez for BT Tethering
+        echo Checking bluez installation
+        bluetoothdversion=$(bluetoothd --version || 0)
+        bluetoothdminversion=5.37
+        bluetoothdversioncompare=$(awk 'BEGIN{ print "'$bluetoothdversion'"<"'$bluetoothdminversion'" }')
+        if [ "$bluetoothdversioncompare" -eq 1 ]; then
+            killall bluetoothd &>/dev/null #Kill current running version if its out of date and we are updating it
+            cd $HOME/src/ && wget https://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.gz && tar xvfz bluez-5.44.tar.gz || die "Couldn't download bluez"
+            cd $HOME/src/bluez-5.44 && ./configure --enable-experimental --disable-systemd && \
+            make && sudo make install && sudo cp ./src/bluetoothd /usr/local/bin/ || die "Couldn't make bluez"
+            oref0-bluetoothup
+        else
+            echo bluez v ${bluetoothdversion} already installed
+        fi
    sudo pip install libpebble2
-   ```
+````
+   
+You can confirm your bluetooth version via this command: `bluetoothd --version`
 
 1. Open Settings -> Bluetooth on your Pebble, unpair any phones, and leave it on that screen.
 
-1. Initialize Bluetooth, find the Pebble's Bluetooth MAC address, pair to it, bind it to a virtual serial device:
+1. Initialize Bluetooth, find the Pebble's Bluetooth MAC address, pair to it, bind it to a virtual serial device.  Get your Pebble's MAC address from the watch Settings --> System -->Information --> BT Address:
 
   ```
   hciconfig # it's down
@@ -114,8 +129,8 @@ openaps use pebble set_time
 
   # in your openaps directory:
   openaps vendor add pancreabble
-  openaps device add pebble pancreabble /dev/rfcomm0
-  openaps use pebble notify "hello" "testing"
+  openaps device add pbl pancreabble /dev/rfcomm0
+  openaps use pbl notify "hello" "testing"
 
   # result:
   {
@@ -125,7 +140,7 @@ openaps use pebble set_time
   }
   ```
 
-1. Add these lines to `/etc/rf.local` so that Bluetooth is initialized and the Pebble is paired and bound to `/dev/rfcomm0` on boot:
+1. Add these lines to `/etc/rc.local` so that Bluetooth is initialized and the Pebble is paired and bound to `/dev/rfcomm0` on boot:
   ```
   hciconfig hci0 up
   systemctl start bluetooth.service
