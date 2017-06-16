@@ -80,22 +80,14 @@ openaps use pbl set_time
 1. Install [BlueZ](http://www.bluez.org/) and [libpebble2](https://github.com/pebble/libpebble2).  You need a bluetooth version 5.37 or above.  Best way to install would be:
 
 ````
-   # I assume it's something like:
-# Install Bluez for BT Tethering
-        echo Checking bluez installation
-        bluetoothdversion=$(bluetoothd --version || 0)
-        bluetoothdminversion=5.37
-        bluetoothdversioncompare=$(awk 'BEGIN{ print "'$bluetoothdversion'"<"'$bluetoothdminversion'" }')
-        if [ "$bluetoothdversioncompare" -eq 1 ]; then
-            killall bluetoothd &>/dev/null #Kill current running version if its out of date and we are updating it
-            cd $HOME/src/ && wget https://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.gz && tar xvfz bluez-5.44.tar.gz || die "Couldn't download bluez"
-            cd $HOME/src/bluez-5.44 && ./configure --enable-experimental --disable-systemd && \
-            make && sudo make install && sudo cp ./src/bluetoothd /usr/local/bin/ || die "Couldn't make bluez"
-            oref0-bluetoothup
-        else
-            echo bluez v ${bluetoothdversion} already installed
-        fi
-   sudo pip install libpebble2
+# this installs bluez 5.44
+killall bluetoothd &>/dev/null
+sudo apt-get install -y libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev
+cd $HOME/src/ && wget https://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.gz && tar xvfz bluez-5.44.tar.gz || die "Couldn't download bluez"
+cd $HOME/src/bluez-5.44 && ./configure --enable-experimental --disable-systemd &&  make && sudo make install && sudo cp ./src/bluetoothd /usr/local/bin/ || die "Couldn't make bluez"
+
+# this installs libpebble2
+sudo pip install libpebble2
 ````
    
 You can confirm your bluetooth version via this command: `bluetoothd --version`
