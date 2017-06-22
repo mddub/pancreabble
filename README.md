@@ -89,6 +89,9 @@ cd $HOME/src/bluez-5.44 && ./configure --enable-experimental --disable-systemd &
 
 # this installs libpebble2
 sudo pip install libpebble2
+
+#reboot the computer to make sure the correct bluetoothd is loaded...I needed to
+sudo reboot
 ````
    
 You can confirm your bluetooth version via this command: `bluetoothd --version`
