@@ -82,12 +82,16 @@ openaps use pbl set_time
 ````
 # this installs bluez 5.44
 killall bluetoothd &>/dev/null
-sudo apt-get install -y libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev
+sudo apt-get update
+sudo apt-get install -y libusb-dev libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev --fix-missing
 cd $HOME/src/ && wget https://www.kernel.org/pub/linux/bluetooth/bluez-5.44.tar.gz && tar xvfz bluez-5.44.tar.gz || die "Couldn't download bluez"
 cd $HOME/src/bluez-5.44 && ./configure --enable-experimental --disable-systemd &&  make && sudo make install && sudo cp ./src/bluetoothd /usr/local/bin/ || die "Couldn't make bluez"
 
 # this installs libpebble2
 sudo pip install libpebble2
+
+#reboot the computer to make sure the correct bluetoothd is loaded...I needed to
+sudo reboot
 ````
    
 You can confirm your bluetooth version via this command: `bluetoothd --version`
