@@ -10,6 +10,7 @@ from notify import notify
 from pebble import set_time
 from urchin import format_urchin_data
 from urchin import send_urchin_data
+from handle_notification import handle_notification
 from version import __version__
 
 class version(Use):
@@ -33,4 +34,5 @@ def get_uses(device, config):
         format_urchin_data,
         send_urchin_data,
         version,
+        handle_notification
     ]
