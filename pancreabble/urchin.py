@@ -125,7 +125,7 @@ class format_urchin_data(Use):
         cgm_records = [
             {
                 #'date': datetime.strptime(r['display_time'], '%Y-%m-%dT%H:%M:%S'),
-                'date': dateutil.parser.parse(r['display_time'], ignoretz=True)
+                'date': dateutil.parser.parse(r['display_time'], ignoretz=True),
                 'sgv': r['glucose'],
                 'trend': DEXCOM_TRENDS.index(r.get('trend_arrow')),
             }
