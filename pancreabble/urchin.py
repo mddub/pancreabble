@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import dateutil.parser
 from datetime import datetime
 from datetime import timedelta
 from operator import itemgetter
@@ -123,7 +124,8 @@ class format_urchin_data(Use):
         cgm_history = json.loads(open(args.glucose_history).read())
         cgm_records = [
             {
-                'date': datetime.strptime(r['display_time'], '%Y-%m-%dT%H:%M:%S'),
+                #'date': datetime.strptime(r['display_time'], '%Y-%m-%dT%H:%M:%S'),
+                'date': dateutil.parser.parse(r['display_time'], ignoretz=True)
                 'sgv': r['glucose'],
                 'trend': DEXCOM_TRENDS.index(r.get('trend_arrow')),
             }
@@ -144,7 +146,8 @@ class format_urchin_data(Use):
 
         status = 'openaps @ {:%-I:%M%P}'.format(datetime.now())
         if args.status_text:
-            status = args.status_text
+            status = arg
+            s.status_text
         elif args.status_json:
             status = json.loads(open(args.status_json).read())['message']
 
