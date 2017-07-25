@@ -2,6 +2,9 @@ from libpebble2.services.notifications import Notifications
 from pebble import PebbleUse
 import os.path
 import time
+import json
+
+# TODO: parse and use pancreoptions.json options
 
 SMB_SUGGESTED="enact/smb-suggested.json"
 
@@ -14,12 +17,6 @@ class handle_notification(PebbleUse):
         parser.add_argument('last_notification_file')
         parser.add_argument('snooze')
 
-    def dict_get(d, k):
-        if d.has_key(k):
-            return d[k]
-        else
-            return ""
-
     def perform(self, pebble, args, app):
         received=False
         subject=""
@@ -27,7 +24,7 @@ class handle_notification(PebbleUse):
         ret=None
         params = self.get_params(args)
         if os.path.isfile(params['last_notification_file']):
-            last_notification=os.path.getmtime(params['last_notification_file']))
+            last_notification=os.path.getmtime(params['last_notification_file'])
             if (time.time()-last_notification)<int(params['snooze'])*60:
                 subject="ALREADY_NOTIFIED"
                 message="Skipping notification. Last pebble notification sent less than %d minutes ago" % int(params['snooze'])
@@ -41,17 +38,22 @@ class handle_notification(PebbleUse):
                 received=False
 
         if subject=="" and os.path.isfile(SMB_SUGGESTED):
-           j=json.load(SMB_SUGGESTED)
-           reason=dict_get(j, 'reason')
+           j=json.load(open(SMB_SUGGESTED, 'r'))
+           j.setdefault('reason', '')
+           reason=j['reason'] 
            if ("add'l" in reason) or ("maxBolus" in reason):
-               bg=dict_get(j, 'bg')
-               tick=dict_get(j, 'tick')
-               carbsReq=dict_get(j, 'carbsReq')
-               insulinReq=dict_get(j, 'insulinReq')
-               if int(carbsReq)>0:
+               j.setdefault('bg', '???')
+               bg=j['bg']
+               j.setdefault('tick', '???')
+               tick=j['tick']
+               j.setdefault('carbsReq', 0.0)
+               j.setdefault('insulinReq', 0.0)
+               carbsReq=j['carbsReq']
+               insulinReq=j['insulinReq']
+               if carbsReq>0:
                   subject="carbsReq"
                   message+="carbsReq: %s. " % carbsReq
-               if int(insulinReq)>0:
+               if insulinReq>0:
                   subject="insulinReq"
                   message+="insulinReq: %s. " % insulinReq
                message+=reason
@@ -61,7 +63,7 @@ class handle_notification(PebbleUse):
                f=open(params['last_notification_file'], "w")
                f.write(message)
                f.close()
-           else
+           else:
              subject="OK"
              message="No additional carbs or bolus required."
              received=False
