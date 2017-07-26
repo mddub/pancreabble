@@ -3,8 +3,7 @@ from pebble import PebbleUse
 import os.path
 import time
 import json
-
-# TODO: parse and use pancreoptions.json options
+import string
 
 SMB_SUGGESTED="enact/smb-suggested.json"
 
@@ -37,7 +36,14 @@ class handle_notification(PebbleUse):
                 message="%s not modified for %d minutes" % (SMB_SUGGESTED, int(params['snooze']))
                 received=False
 
-        if subject=="" and os.path.isfile(SMB_SUGGESTED):
+        options=json.load(open("pancreoptions.json", "r"))
+        options.setdefault('notify_insulinreq', 'true')
+        options.setdefault('notify_carbsreq', 'true')
+        options['notify_insulinreq']=string.lower(options['notify_insulinreq'])
+        options['notify_carbsreq']=string.lower(options['notify_carbsreq'])
+        parsesuggested=options['notify_insulinreq']=='true' or options['notify_carbsreq']=='true'
+
+        if subject=="" and os.path.isfile(SMB_SUGGESTED) and parsesuggested:
            j=json.load(open(SMB_SUGGESTED, 'r'))
            j.setdefault('reason', '')
            reason=j['reason'] 
@@ -58,11 +64,12 @@ class handle_notification(PebbleUse):
                   message+="insulinReq: %s. " % insulinReq
                message+=reason
                message+=". BG: %s. Tick: %s." % (bg, tick)
-               Notifications(pebble).send_notification(subject, message)
-               received=True
-               f=open(params['last_notification_file'], "w")
-               f.write(message)
-               f.close()
+               if (carbsReq>0 and options['notify_carbsreq']=='true') or (insulinReq>0 and options['notify_insulinreq']=='true'):
+                   Notifications(pebble).send_notification(subject, message)
+                   received=True
+                   f=open(params['last_notification_file'], "w")
+                   f.write(message)
+                   f.close()
            else:
              subject="OK"
              message="No additional carbs or bolus required."
