@@ -124,20 +124,19 @@ class format_urchin_data(Use):
         cgm_history = json.loads(open(args.glucose_history).read())
         cgm_records = [
             {
-                #'date': datetime.strptime(r['display_time'], '%Y-%m-%dT%H:%M:%S'),
-                'date': dateutil.parser.parse(r['display_time'], ignoretz=True),
-                'sgv': r['glucose'],
-                'trend': DEXCOM_TRENDS.index(r.get('trend_arrow')),
+                'date': dateutil.parser.parse(r['dateString'], ignoretz=True),
+                'sgv': r['sgv'],
+                'trend': DEXCOM_TRENDS.index(r.get('direction').upper().replace("FORTYFIVE","45_"))
             }
             for r
-            in sorted(cgm_history, key=itemgetter('display_time'), reverse=True)
+            in sorted(cgm_history, key=itemgetter('dateString'), reverse=True)
         ]
         end_time = cgm_records[0]['date']
         graph = graph_array(end_time, cgm_records, MAX_URCHIN_SGVS)
         delta = NO_DELTA_VALUE if graph[1] == 0 else (graph[0] - graph[1])
 
         if args.cgm_clock:
-            cgm_clock = datetime.strptime(json.loads(open(args.cgm_clock).read()), '%Y-%m-%dT%H:%M:%S')
+            cgm_clock = dateutil.parser.parse(json.loads(open(args.cgm_clock).read()), ignoretz=True)
             cgm_clock_reported_at = datetime.fromtimestamp(os.stat(args.cgm_clock).st_mtime)
             recency = int((datetime.now() - end_time + cgm_clock - cgm_clock_reported_at).total_seconds())
         else:
