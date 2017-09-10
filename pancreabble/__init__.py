@@ -10,7 +10,7 @@ from notify import notify
 from pebble import set_time
 from urchin import format_urchin_data
 from urchin import send_urchin_data
-from handle_notification import handle_notification
+from oref0_notify_action_required import oref0_notify_action_required
 from version import __version__
 
 class version(Use):

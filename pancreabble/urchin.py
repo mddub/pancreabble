@@ -125,8 +125,8 @@ class format_urchin_data(Use):
         cgm_records = [
             {
                 'date': dateutil.parser.parse(r['dateString'], ignoretz=True),
-                'sgv': r['sgv'],
-                'trend': DEXCOM_TRENDS.index(r.get('direction').upper().replace("FORTYFIVE","45_"))
+                'sgv': r['glucose'],
+                'trend': DEXCOM_TRENDS.index(r.get('trend_arrow'))
             }
             for r
             in sorted(cgm_history, key=itemgetter('dateString'), reverse=True)
@@ -145,8 +145,7 @@ class format_urchin_data(Use):
 
         status = 'openaps @ {:%-I:%M%P}'.format(datetime.now())
         if args.status_text:
-            status = arg
-            s.status_text
+            status = args.status_text
         elif args.status_json:
             status = json.loads(open(args.status_json).read())['message']
 
