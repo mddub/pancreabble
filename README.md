@@ -68,6 +68,100 @@ Raspberry Pi/Intel Edison -> Bluetooth -> Pebble watch
 
 See `openaps use pbl format_urchin_data --help` for more options.
 
+
+## Using it in your loop: Urchin CGM -- An alternate approach as provided by Matt Pressnall
+What I do is set two different scripts to run to keep the Pebble updated...this is separate from the crontab "loop" but relies a bit on some the data that the loop generates.  It, also, generates its own data to make sure things will run.  Lastly, it has been 9 months since I touched any of this so I may have forgotten a few things.  I hacked and jammed to make this work...I did NOT follow best practices.
+
+Here's what my cron looks like for these extra scripts:
+````
+# update the Pebble with new data...try every minute
+* * * * * /bin/bash /home/pi/multiloop/scripts/update-pebble.sh
+# as soon as we reboot, let's put something on the watch...even old data (maybe a bad idea but we know we are connected as soon as the rig comes up).
+@reboot /bin/bash /home/pi/multiloop/scripts/pebble-watchface-update.sh
+````
+
+And the scripts.
+
+You should run each of these commands one at a time in update-pebble.sh to see where things might bomb out.
+````
+#!/bin/bash
+#update-pebble.sh - runs every minute
+cd /home/pi/multiloop
+# format the cgm file for localized use...do this hacky sed replacement that will fail for any timezone other than Pacific...the report needs the timezone data stripped off so do it.  Replace with whatever offset your timezone has from UTC. (8 or 7 hours for Pacific depending on daylight savings)
+sed 's/-08:00//g' /home/pi/multiloop/cgm/cgm-glucose.json | sed 's/-07:00//g' > /home/pi/multiloop/cgm/localized-cgm-glucose.json
+# invoke the pebble.json report
+openaps report invoke upload/pebble.json
+# do some more hacks to make it work
+sed 's/content/message/g' /home/pi/multiloop/upload/pebble.json > /home/pi/multiloop/urchin-status.json
+# make sure we have clock time
+openaps report invoke monitor/dex-clock.json
+# format that urchin data
+openaps report invoke urchin-data.json
+# send it to the watch
+openaps use pbl send_urchin_data urchin-data.json
+````
+
+
+````
+#!/bin/bash
+# pebble-watchface-update.sh - fires on reboot...runs forever? why did I do this?
+while true
+do
+	cd /home/pi/multiloop
+  # take whatever data we had last formatted and send to the watch so we know right away we have a good connection
+	openaps use pbl send_urchin_data urchin-data.json >/dev/null 2>&1
+	sleep 5
+done
+````
+
+Just for fun, this is what my "upload/pebble.json" report and other items look like from openaps.ini
+
+````
+[report "upload/pebble.json"]
+suggested = enact/suggested.json
+use = shell
+temp_basal = monitor/temp_basal.json
+reporter = text
+basal_profile = settings/basal_profile.json
+json_default = True
+meal = monitor/meal.json
+device = pebble
+enacted = enact/enacted.json
+remainder = 
+iob = monitor/iob.json
+glucose = monitor/glucose.json
+
+[vendor "pancreabble"]
+path = .
+module = pancreabble
+
+[device "pbl"]
+vendor = pancreabble
+extra = pbl.ini
+
+[device "pebble"]
+vendor = openaps.vendors.process
+extra = pebble.ini
+
+[report "monitor/dex-clock.json"]
+device = cgm
+use = ReadDisplayTime
+reporter = JSON
+
+[report "urchin-data.json"]
+use = format_urchin_data
+reporter = JSON
+cgm_clock = monitor/dex-clock.json
+report = urchin-data.json
+device = pbl
+glucose_history = cgm/localized-cgm-glucose.json
+status_text = 
+status_json = urchin-status.json
+action = add
+
+````
+
+
 ## Setting the Pebble clock
 
 It's a good idea to set the Pebble clock to match the Pi/Edison once per loop:
