@@ -13,6 +13,7 @@ setup(
         "libpebble2",
         "openaps",
         "tzlocal",
+        "python-dateutil",
     ],
     scripts = [
 
